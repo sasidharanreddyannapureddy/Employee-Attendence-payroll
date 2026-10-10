@@ -1,0 +1,11 @@
+{% extends "payroll/base.html" %}
+{% block content %}
+<h1>{% if object %}Edit employee{% else %}Add employee{% endif %}</h1>
+<p class="sub">Name, designation and monthly basic salary.</p>
+<form method="post" class="card">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button class="btn" type="submit">Save</button>
+  <a class="btn gray" href="{% url 'employee_list' %}">Cancel</a>
+</form>
+{% endblock %}

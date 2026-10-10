@@ -1,0 +1,73 @@
+{% extends "payroll/base.html" %}
+{% block content %}
+<h1>Monthly Attendance Report</h1>
+<p class="sub">{{ month_name }} {{ year }}</p>
+
+<form method="get" class="filter card no-print">
+  <select name="month">
+    {% for num, name in months %}<option value="{{ num }}" {% if num == month %}selected{% endif %}>{{ name }}</option>{% endfor %}
+  </select>
+  <input type="number" name="year" value="{{ year }}" min="1900" max="9999" style="width:100px">
+  <button class="btn">Filter</button>
+</form>
+
+<div class="metric-grid">
+  <div class="metric"><span>Gross payroll</span><strong>{{ totals.gross|floatformat:"2g" }}</strong></div>
+  <div class="metric"><span>Absence deductions</span><strong>{{ totals.deduction|floatformat:"2g" }}</strong></div>
+  <div class="metric"><span>Overtime pay</span><strong>{{ totals.overtime|floatformat:"2g" }}</strong></div>
+  <div class="metric"><span>Net payroll</span><strong>{{ totals.net|floatformat:"2g" }}</strong></div>
+</div>
+
+<div class="toolbar no-print">
+  <div class="status-strip">
+    <span class="pill">Overtime rate: 1.5x hourly pay</span>
+    <span class="pill">Deduction only for absent days</span>
+  </div>
+  <input type="text" placeholder="Search payroll" data-filter-target="#payroll-table" style="max-width:260px">
+</div>
+
+<div class="card">
+  <table id="payroll-table">
+    <tr>
+      <th>Employee</th><th>Designation</th>
+      <th class="num">Present</th><th class="num">Absent</th><th class="num">Leave</th>
+      <th class="num">Per day</th><th class="num">OT hrs</th><th class="num">OT pay</th>
+      <th class="num">Deduction</th><th class="num">Net salary</th><th class="no-print"></th>
+    </tr>
+    {% for r in rows %}
+    <tr data-filter-row>
+      <td><strong>{{ r.emp.name }}</strong></td><td>{{ r.emp.designation }}</td>
+      <td class="num">{{ r.present }}</td><td class="num">{{ r.absent }}</td><td class="num">{{ r.leave }}</td>
+      <td class="num">{{ r.per_day|floatformat:"2g" }}</td>
+      <td class="num">{{ r.overtime_hours|floatformat:"2g" }}</td>
+      <td class="num">{{ r.overtime_pay|floatformat:"2g" }}</td>
+      <td class="num">{{ r.deduction|floatformat:"2g" }}</td>
+      <td class="num">{{ r.net|floatformat:"2g" }}</td>
+      <td class="no-print">
+        <a class="btn gray" href="{% url 'payslip' r.emp.id %}?month={{ month }}&year={{ year }}">Slip</a>
+        <a class="btn ghost" href="{% url 'payslip_pdf' r.emp.id %}?month={{ month }}&year={{ year }}">PDF</a>
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="11" class="empty">No employees yet.</td></tr>
+    {% endfor %}
+    {% if rows %}
+    <tfoot>
+      <tr><td colspan="7">Total</td>
+        <td class="num">{{ totals.overtime|floatformat:"2g" }}</td>
+        <td class="num">{{ totals.deduction|floatformat:"2g" }}</td>
+        <td class="num">{{ totals.net|floatformat:"2g" }}</td><td class="no-print"></td></tr>
+    </tfoot>
+    {% endif %}
+  </table>
+</div>
+
+{% if rows %}
+<form method="post" action="{% url 'generate_salaries' %}" class="no-print">
+  {% csrf_token %}
+  <input type="hidden" name="month" value="{{ month }}">
+  <input type="hidden" name="year" value="{{ year }}">
+  <button class="btn green" type="submit">Save salaries for {{ month_name }} {{ year }}</button>
+</form>
+{% endif %}
+{% endblock %}

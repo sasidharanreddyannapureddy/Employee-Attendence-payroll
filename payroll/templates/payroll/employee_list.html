@@ -1,0 +1,27 @@
+{% extends "payroll/base.html" %}
+{% block content %}
+<div class="toolbar">
+  <div><h1>Employees</h1><p class="sub" style="margin:0">Employee master data</p></div>
+  <div class="filter">
+    <input type="text" placeholder="Search employees" data-filter-target="#employee-table" style="max-width:230px">
+    <a class="btn" href="{% url 'employee_add' %}">Add employee</a>
+  </div>
+</div>
+<div class="card">
+  <table id="employee-table">
+    <tr><th>ID</th><th>Name</th><th>Designation</th><th class="num">Basic salary</th><th></th></tr>
+    {% for e in employees %}
+    <tr data-filter-row>
+      <td>{{ e.id }}</td><td>{{ e.name }}</td><td>{{ e.designation }}</td>
+      <td class="num">{{ e.basic_salary|floatformat:"2g" }}</td>
+      <td>
+        <a class="btn gray" href="{% url 'employee_edit' e.id %}">Edit</a>
+        <a class="btn red" href="{% url 'employee_delete' e.id %}">Delete</a>
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5">No employees yet.</td></tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

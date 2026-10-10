@@ -1,0 +1,54 @@
+{% extends "payroll/base.html" %}
+{% block title %}Salary Slip - {{ emp.name }} - {{ month_name }} {{ year }}{% endblock %}
+{% block content %}
+<style>
+  .slip { max-width:640px; margin:0 auto; background:#fff; border:1px solid #333; padding:28px; }
+  .slip h2 { margin:0; text-align:center; letter-spacing:1px; }
+  .slip .period { text-align:center; color:#555; margin:4px 0 18px; }
+  .slip .who { display:flex; justify-content:space-between; margin-bottom:14px; font-size:14px; }
+  .slip table td { border-bottom:1px solid #ddd; }
+  .slip tr.net td { font-weight:700; font-size:16px; border-top:2px solid #333; border-bottom:2px solid #333; }
+  .slip .sign { display:flex; justify-content:space-between; margin-top:50px; font-size:13px; color:#555; }
+  .slip .sign span { border-top:1px solid #333; padding-top:4px; min-width:150px; text-align:center; }
+  @media print {
+    @page { size: A4; margin: 15mm; }
+    main { margin:0; padding:0; max-width:100%; }
+    .slip { border:none; max-width:100%; padding:0; }
+  }
+</style>
+
+<div class="no-print toolbar">
+  <a class="btn gray" href="{% url 'report' %}?month={{ month }}&year={{ year }}">&larr; Back to report</a>
+  <div>
+    <a class="btn green" href="{% url 'payslip_pdf' emp.id %}?month={{ month }}&year={{ year }}">Export PDF</a>
+    <button class="btn" onclick="window.print()">Print</button>
+  </div>
+</div>
+
+<div class="slip">
+  <h2>SALARY SLIP</h2>
+  <p class="period">{{ month_name }} {{ year }}</p>
+  <div class="who">
+    <div><strong>{{ emp.name }}</strong><br>{{ emp.designation }}</div>
+    <div style="text-align:right">Employee ID: {{ emp.id }}<br>Days in month: {{ days_in_month }}</div>
+  </div>
+
+  <table>
+    <tr><th>Attendance</th><th class="num">Days</th></tr>
+    <tr><td>Present</td><td class="num">{{ present }}</td></tr>
+    <tr><td>Leave</td><td class="num">{{ leave }}</td></tr>
+    <tr><td>Absent</td><td class="num">{{ absent }}</td></tr>
+  </table>
+  <br>
+  <table>
+    <tr><th>Earnings &amp; Deductions</th><th class="num">Amount</th></tr>
+    <tr><td>Basic salary (gross)</td><td class="num">{{ salary.gross|floatformat:"2g" }}</td></tr>
+    <tr><td>Per day pay</td><td class="num">{{ per_day|floatformat:"2g" }}</td></tr>
+    <tr><td>Overtime ({{ salary.overtime_hours|floatformat:"2g" }} hrs @ {{ overtime_rate|floatformat:"2g" }})</td><td class="num">+ {{ salary.overtime_pay|floatformat:"2g" }}</td></tr>
+    <tr><td>Deduction ({{ absent }} absent day{{ absent|pluralize }})</td><td class="num">- {{ salary.deduction|floatformat:"2g" }}</td></tr>
+    <tr class="net"><td>Net salary</td><td class="num">{{ salary.net|floatformat:"2g" }}</td></tr>
+  </table>
+
+  <div class="sign"><span>Employee signature</span><span>Authorised signatory</span></div>
+</div>
+{% endblock %}

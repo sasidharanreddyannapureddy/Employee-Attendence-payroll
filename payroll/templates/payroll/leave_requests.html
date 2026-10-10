@@ -1,0 +1,65 @@
+{% extends "payroll/base.html" %}
+{% block content %}
+<div class="toolbar">
+  <div>
+    <h1>Leave Requests</h1>
+    <p class="sub" style="margin:0">{{ pending_count }} pending request{{ pending_count|pluralize }}</p>
+  </div>
+  <input type="text" placeholder="Search leave" data-filter-target="#leave-table" style="max-width:260px">
+</div>
+
+<div class="layout-grid">
+  <div class="card">
+    <div class="tabs" data-tabs>
+      <button type="button" class="tab active" data-tab="#panel-requests">Requests</button>
+      <button type="button" class="tab" data-tab="#panel-new">New Request</button>
+    </div>
+
+    <section id="panel-requests" class="tab-panel">
+      <table id="leave-table">
+        <tr><th>Employee</th><th>Dates</th><th class="num">Days</th><th>Status</th><th>Reason</th><th></th></tr>
+        {% for leave in requests %}
+          <tr data-filter-row>
+            <td><strong>{{ leave.emp.name }}</strong><br><span class="sub" style="margin:0">{{ leave.emp.designation }}</span></td>
+            <td>{{ leave.start_date|date:"d M Y" }} - {{ leave.end_date|date:"d M Y" }}</td>
+            <td class="num">{{ leave.days }}</td>
+            <td><span class="badge {{ leave.get_status_display }}">{{ leave.get_status_display }}</span></td>
+            <td>{{ leave.reason|linebreaksbr }}</td>
+            <td>
+              {% if leave.status == "P" %}
+                <form class="inline" method="post" action="{% url 'review_leave' leave.id 'approve' %}">
+                  {% csrf_token %}<button class="btn green">Approve</button>
+                </form>
+                <form class="inline" method="post" action="{% url 'review_leave' leave.id 'reject' %}">
+                  {% csrf_token %}<button class="btn red">Reject</button>
+                </form>
+              {% else %}
+                <span class="pill">{{ leave.reviewed_at|date:"d M Y"|default:"Reviewed" }}</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="6" class="empty">No leave requests yet.</td></tr>
+        {% endfor %}
+      </table>
+    </section>
+
+    <section id="panel-new" class="tab-panel" hidden>
+      <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button class="btn" type="submit">Submit request</button>
+      </form>
+    </section>
+  </div>
+
+  <aside class="card">
+    <h2 style="font-size:17px;margin:0 0 10px">Approval Summary</h2>
+    <div class="status-strip">
+      <span class="pill">Approved leave updates attendance</span>
+      <span class="pill">Leave days are not deducted</span>
+      <span class="pill">Rejected requests keep attendance unchanged</span>
+    </div>
+  </aside>
+</div>
+{% endblock %}

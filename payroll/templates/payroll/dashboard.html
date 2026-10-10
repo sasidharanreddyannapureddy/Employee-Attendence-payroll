@@ -1,0 +1,53 @@
+{% extends "payroll/base.html" %}
+{% block content %}
+<h1>Today's Attendance</h1>
+<p class="sub">{{ today|date:"l, d F Y" }}</p>
+
+<div class="metric-grid">
+  <div class="metric"><span>Employees</span><strong>{{ stats.employees }}</strong></div>
+  <div class="metric"><span>Present today</span><strong>{{ stats.present }}</strong></div>
+  <div class="metric"><span>On leave</span><strong>{{ stats.leave }}</strong></div>
+  <div class="metric"><span>Pending leave</span><strong>{{ stats.pending_leave }}</strong></div>
+</div>
+
+<div class="toolbar">
+  <div class="status-strip">
+    <span class="pill">Live attendance</span>
+    <span class="pill">8h base day</span>
+    <span class="pill">Overtime after 8h</span>
+  </div>
+  <input type="text" placeholder="Search employees" data-filter-target="#today-table" style="max-width:260px">
+</div>
+
+<div class="card">
+  <table id="today-table">
+    <tr><th>Employee</th><th>Designation</th><th>Status</th><th>Check-in</th><th>Check-out</th><th class="num">Hours</th><th></th></tr>
+    {% for r in rows %}
+      <tr data-filter-row>
+        <td><strong>{{ r.emp.name }}</strong></td>
+        <td>{{ r.emp.designation }}</td>
+        <td>
+          {% if r.rec %}<span class="badge {{ r.rec.status }}">{{ r.rec.get_status_display }}</span>
+          {% else %}<span class="badge N">Not marked</span>{% endif %}
+        </td>
+        <td>{{ r.rec.check_in|time:"H:i"|default:"-" }}</td>
+        <td>{{ r.rec.check_out|time:"H:i"|default:"-" }}</td>
+        <td class="num">{{ r.rec.hours|default:"-" }}</td>
+        <td>
+          {% if r.rec and r.rec.status != "P" %}
+            <span class="pill">{{ r.rec.get_status_display }}</span>
+          {% elif not r.rec or not r.rec.check_in %}
+            <form class="inline" method="post" action="{% url 'check_in' r.emp.id %}">{% csrf_token %}<button class="btn green">Check in</button></form>
+          {% elif not r.rec.check_out %}
+            <form class="inline" method="post" action="{% url 'check_out' r.emp.id %}">{% csrf_token %}<button class="btn">Check out</button></form>
+          {% else %}
+            <span class="pill">Completed</span>
+          {% endif %}
+        </td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="7" class="empty">No employees yet. <a href="{% url 'employee_add' %}">Add one</a>.</td></tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

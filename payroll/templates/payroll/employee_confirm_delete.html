@@ -1,0 +1,10 @@
+{% extends "payroll/base.html" %}
+{% block content %}
+<h1>Delete employee</h1>
+<form method="post" class="card">
+  {% csrf_token %}
+  <p>Delete <strong>{{ object.name }}</strong>? Their attendance and salary records will also be deleted.</p>
+  <button class="btn red" type="submit">Yes, delete</button>
+  <a class="btn gray" href="{% url 'employee_list' %}">Cancel</a>
+</form>
+{% endblock %}

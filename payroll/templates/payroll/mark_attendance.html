@@ -1,0 +1,49 @@
+{% extends "payroll/base.html" %}
+{% block content %}
+<h1>Mark Attendance</h1>
+<p class="sub">Set Present / Absent / Leave for every employee on a chosen date.</p>
+
+<form method="get" class="filter card">
+  <label for="d" style="margin:0">Date</label>
+  <input id="d" type="date" name="date" value="{{ day|date:'Y-m-d' }}" style="width:auto">
+  <button class="btn gray">Load</button>
+</form>
+
+<form method="post" class="card">
+  {% csrf_token %}
+  <input type="hidden" name="date" value="{{ day|date:'Y-m-d' }}">
+  <table>
+    <tr><th>Employee</th><th>Designation</th>{% for code, label in statuses %}<th>{{ label }}</th>{% endfor %}</tr>
+    {% for r in rows %}
+    <tr>
+      <td>{{ r.emp.name }}</td><td>{{ r.emp.designation }}</td>
+      {% for code, label in statuses %}
+      <td><input type="radio" name="status_{{ r.emp.id }}" value="{{ code }}" {% if r.status == code %}checked{% endif %} style="width:auto"></td>
+      {% endfor %}
+    </tr>
+    {% empty %}
+    <tr><td colspan="5">No employees yet.</td></tr>
+    {% endfor %}
+  </table>
+  <p style="margin-top:14px">
+    <button class="btn" type="submit">Save attendance</button>
+    <button class="btn green" type="button" data-mark-all="P">All present</button>
+    <button class="btn amber" type="button" data-mark-all="L">All leave</button>
+    <button class="btn gray" type="button" data-clear-attendance>Clear</button>
+  </p>
+</form>
+{% endblock %}
+{% block scripts %}
+<script>
+  document.querySelectorAll('[data-mark-all]').forEach(function(button) {
+    button.addEventListener('click', function() {
+      document.querySelectorAll('input[value="' + button.dataset.markAll + '"]').forEach(function(radio) {
+        radio.checked = true;
+      });
+    });
+  });
+  document.querySelector('[data-clear-attendance]')?.addEventListener('click', function() {
+    document.querySelectorAll('input[type=radio]').forEach(function(radio) { radio.checked = false; });
+  });
+</script>
+{% endblock %}
